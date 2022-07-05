@@ -1,9 +1,8 @@
-from flask import Flask
+from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-
-# import random
-
+import random
+import math
 
 app = Flask(__name__)
 
@@ -12,104 +11,108 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 
 db = SQLAlchemy(app)
 
-class Test(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
-    location = db.Column(db.String(50))
-    date_created = db.Column(db.DateTime, default=datetime.now)
-
-
-@app.route('/<name>/<location>')
-def index(name, location):
-    user = Test(name=name, location=location)
-    db.session.add(user)
-    db.session.commit()
-
-    return '<h1>Added new user!<h1>'
-
-@app.route('/<name>')
-def get_user(name):
-    user = Test.query.filter_by(name=name).first()
-
-    return f"<h1>User is located in: {user.location}<h1>"
 
 
 
+# @app.route('/', methods = ['GET', "POST"])
+# def guess():
+#     counter = 0
+#     message = ""
+#     if request.method == 'POST':
+#         counter += 1
+#         form = request.form
+#         user_guess = int(form["guess"])
+#         comp_num = random.randint(1, 10)
+
+#         if comp_num == user_guess:
+#             message = "Well done, you got it"
+#             return render_template("game_over.html", message=message)
+#         elif comp_num > user_guess:
+#             message = "Too low"
+#         else:
+#             message = "Too high"
+#             if counter == 3:
+#                 message = "You failed"
+#                 return render_template("game_over.html", message=message)
+#     return render_template("game.html", message=message)
 
 
 
-# class Game(Base):
-#     __tablename__ = "game"
+@app.route('/', methods = ['GET', "POST"])
+def game():
+    counter = 0
+    message = ""
+    if request.method == 'POST':
+        counter += 1
+        form = request.form
+        user = str(form["guess"]).lower()
+        computer = random.choice(['r', 'p', 's'])
 
-#     player_id = Column(Integer, primary_key=True)
-#     username = Column(String)
-#     player_credits = Column(Integer, default=10)
-#     stats_win = Column(Integer)
-#     stats_lose = Column(Integer)
-#     created_date = Column(DateTime, default=datetime.datetime.utcnow)
-
-#     def __init__(self, player_id, username, player_credits, stats_win, stats_lose, created_date):
-#         self.player_id = player_id
-#         self.username = username
-#         self.player_credits - player_credits
-#         self.stats_win = stats_win
-#         self.stats_lose = stats_lose
-#         self.created_date = created_date
-
-
-
-
-
-# CHOICES = 'rps'
+        if computer == user:
+            message = f'It is a tie. You and the computer have both chosen {user}.'
+            return render_template("game.html", message=message)
+        elif (user == 'r' and computer == 's') or (user == 's' and computer == 'p') or (user == 'p' and computer == 'r'):
+            message = f'You chose {user} and the computer chose {computer}. You lost :('
+            return render_template("game.html", message=message)
+        else:
+            message = f"You chose {user} and the computer chose {computer}. You won!"
+            return render_template("game.html", message=message)
+    return render_template("game.html", message=message)
 
 
-# def get_player_choice():
-#     """Get user input and validate it is one of the choices above"""
-#     player_choice = None
-#     while player_choice is None:
-#         player_choice = input('Choices: \n(R)ock \n(P)aper \n(S)cissors \n\nPick: ')
-#         if player_choice.lower() not in CHOICES:
-#             player_choice = None
-#     return player_choice.lower()
 
 
-# def get_computer_choice():
-#     """Have the computer pick one of the valid choices at random"""
-#     computer_choice = random.randint(0, 2)
-#     computer_choice = CHOICES[computer_choice]
-#     return computer_choice
 
+# def play():
+#     user = input("What's your choice? 'r' for rock, 'p' for paper, 's' for scissors\n")
+#     user = user.lower()
 
-# def is_draw(player_choice, computer_choice):
-#     """Check if game was a draw"""
-#     if player_choice == computer_choice:
+#     computer = random.choice(['r', 'p', 's'])
+
+#     if user == computer:
+#         return (0, user, computer)
+
+#     # r > s, s > p, p > r
+#     if is_win(user, computer):
+#         return (1, user, computer)
+
+#     return (-1, user, computer)
+
+# def is_win(player, opponent):
+#     # return true is the player beats the opponent
+#     # winning conditions: r > s, s > p, p > r
+#     if (player == 'r' and opponent == 's') or (player == 's' and opponent == 'p') or (player == 'p' and opponent == 'r'):
 #         return True
+#     return False
 
 
-# def print_winner(player_choice, computer_choice):
-#     """Check to see who won"""
-#     if player_choice == 'r' and computer_choice == 's':
-#         print('Player wins!')
-#     elif player_choice == 's' and computer_choice == 'p':
-#         print('Player wins!')
-#     elif player_choice == 'p' and computer_choice == 'r':
-#         print('Player wins!')
+
+# def play_best_of(n):
+#     # play against the computer until someone wins best of n games
+#     # to win, you must win ceil(n/2) games (ie 2/3, 3/5, 4/7)
+#     player_wins = 0
+#     computer_wins = 0
+#     wins_necessary = math.ceil(n/2)
+#     while player_wins < wins_necessary and computer_wins < wins_necessary:
+#         result, user, computer = play()
+#         # tie
+#         if result == 0:
+#             print('It is a tie. You and the computer have both chosen {}. \n'.format(user))
+#         # you win
+#         elif result == 1:
+#             player_wins += 1
+#             return ('You chose {} and the computer chose {}. You won!\n'.format(user, computer))
+#         else:
+#             computer_wins += 1
+#             return ('You chose {} and the computer chose {}. You lost :(\n'.format(user, computer))
+
+#     if player_wins > computer_wins:
+#         return ('You have won the best of {} games! What a champ :D'.format(n))
 #     else:
-#         print('Computer wins!')
-#         print('%s beats %s' % (computer_choice, player_choice))
+#         return ('Unfortunately, the computer has won the best of {} games. Better luck next time!'.format(n))
 
 
-# def play_game():
-#     """play the game"""
-#     player_choice = get_player_choice()
-#     computer_choice = get_computer_choice()
-#     if is_draw(player_choice, computer_choice):
-#         print("It's a draw, both players picked %s: " % player_choice)
-#     else:
-#         print("Computer picked: %s" % computer_choice)
-#         print("Player picked: %s" % player_choice)
-#         print_winner(player_choice, computer_choice)
+if __name__ == '__main__':
+    app.run(debug=True)
 
-
-# if __name__ == "__main__":
-#     play_game()
+    # play_best_of(3)

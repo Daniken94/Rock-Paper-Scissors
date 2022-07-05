@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+
+{% block container %}
+
+<h3>"What's your choice? 'r' for rock, 'p' for paper, 's' for scissors"</h3>
+
+<form method="POST">
+    <input name="guess"/>
+    <input type="submit"/>
+</form>
+<p>
+    {{ message }}
+</p>
+{% endblock %}
+
+</html>
