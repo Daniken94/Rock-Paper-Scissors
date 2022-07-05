@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+
+{% block container %}
+<p>
+    Would you like to play?
+</p>
+
+<form method="POST">
+    <label for="name">Type your name:</label>
+    <input name="username"/>
+    <button name ="credits" type="submit" value="10">Add 10 credits to start the game</button> 
+    <button name ="credits" type="submit" value="0">Cancel</button> 
+</form>
+
+{% endblock %}
+
+</html>

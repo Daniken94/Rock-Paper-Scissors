@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for, session 
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import random
@@ -38,27 +38,103 @@ db = SQLAlchemy(app)
 
 
 
+# @app.route('/', methods = ['GET', "POST"])
+# def play():
+#     return render_template("game_over.html")
+
 @app.route('/', methods = ['GET', "POST"])
-def game():
-    counter = 0
-    message = ""
+def start():
     if request.method == 'POST':
-        counter += 1
+        if request.form["credits"] == str(10):
+            return redirect(url_for("game"))
+        if request.form["credits"] == str(0):
+            return render_template("game_over.html")
+    return render_template("start_game.html")
+
+
+@app.route('/game', methods = ['GET', "POST"])
+def game():
+    form = request.form
+    message = ""
+    credits = 10
+    username = str(form["username"])
+    if request.method == 'POST':
         form = request.form
+        username = str(form["username"])
+        credits = int(form["credits"])
         user = str(form["guess"]).lower()
         computer = random.choice(['r', 'p', 's'])
 
         if computer == user:
             message = f'It is a tie. You and the computer have both chosen {user}.'
-            return render_template("game.html", message=message)
+            return render_template("game.html", message=message, credits=credits, username=username)
         elif (user == 'r' and computer == 's') or (user == 's' and computer == 'p') or (user == 'p' and computer == 'r'):
             message = f'You chose {user} and the computer chose {computer}. You lost :('
-            return render_template("game.html", message=message)
+            return render_template("game.html", message=message, credits=credits, username=username)
         else:
             message = f"You chose {user} and the computer chose {computer}. You won!"
-            return render_template("game.html", message=message)
-    return render_template("game.html", message=message)
+            return render_template("game.html", message=message, credits=credits, username=username)
+    
+    return render_template("game.html", message=message, credits=credits, username=username)
 
+
+# @app.route('/', methods = ['GET', "POST"])
+# def play_best_of(n=5):
+#     message = ""
+#     player_wins = 0
+#     computer_wins = 0
+#     wins_necessary = math.ceil(n/2)
+#     while player_wins < wins_necessary and computer_wins < wins_necessary:
+#         result, user, computer = play()
+#         # tie
+#         if result == 0:
+#             message = f'It is a tie. You and the computer have both chosen {user}.'
+#             return render_template("game.html", message=message, credits=credits)
+#         # you win
+#         elif result == 1:
+#             player_wins += 1
+#             message = f"You chose {user} and the computer chose {computer}. You won!"
+#             return render_template("game.html", message=message, credits=credits)
+#         else:
+#             computer_wins += 1
+#             message = f'You chose {user} and the computer chose {computer}. You lost :('
+#             return render_template("game.html", message=message, credits=credits)
+
+#     if player_wins > computer_wins:
+#         message = f'You have won the best of {n} games! What a champ :D'
+#         return render_template("game_over.html", message=message, credits=credits)
+#     else:
+#         message = f'Unfortunately, the computer has won the best of {n} games. Better luck next time!'
+#         return render_template("game_over.html", message=message, credits=credits)
+
+
+# def play():
+#     form = request.form
+#     user = str(form["guess"]).lower()
+#     computer = random.choice(['r', 'p', 's'])
+
+#     if user == computer:
+#         return (0, user, computer)
+
+#     # r > s, s > p, p > r
+#     if is_win(user, computer):
+#         return (1, user, computer)
+
+#     return (-1, user, computer)
+
+# def is_win(player, opponent):
+#     if (player == 'r' and opponent == 's') or (player == 's' and opponent == 'p') or (player == 'p' and opponent == 'r'):
+#         return True
+#     return False
+
+
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+    
 
 
 
@@ -111,8 +187,4 @@ def game():
 #     else:
 #         return ('Unfortunately, the computer has won the best of {} games. Better luck next time!'.format(n))
 
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
-    # play_best_of(3)
+# play_best_of(3)

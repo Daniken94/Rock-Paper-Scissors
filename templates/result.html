@@ -3,18 +3,25 @@
 
 {% block container %}
 
-<h3>What's your choice?</h3>
+
+
+<h3>    {{ message }}  </h3>
+
+<h3>    Next try?</h3>
+
+
+<h3>"What's your choice? 'r' for rock, 'p' for paper, 's' for scissors"</h3>
 
 <form method="POST">
     <button name ="guess" type="submit" value="r">Rock!</button> 
     <button name ="guess" type="submit" value="p">Paper!</button> 
     <button name ="guess" type="submit" value="s">Scissors!</button> 
 </form>
+
 <p>
-    {{ message }}
-    <br>
     Your credits: {{ credits }}
 </p>
+
 {% endblock %}
 
 </html>
