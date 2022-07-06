@@ -2,9 +2,14 @@
 {% extends 'base.html' %}
 
 {% block container %}
+
+<h3>GAME OVER</h3>
 <p>
-    {{ message }}
+    You have't got enought credits.
 </p>
+<form method="POST">
+    <button name ="credits" type="submit" value="10">ADD 10 CREDITS</button> 
+</form>
 {% endblock %}
 
 </html>

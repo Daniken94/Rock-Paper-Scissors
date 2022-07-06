@@ -11,121 +11,81 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 
 db = SQLAlchemy(app)
 
+class Start(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50))
+    credits = db.Column(db.Integer, default=10)
+    date_created = db.Column(db.DateTime, default=datetime.now)
 
 
-
-# @app.route('/', methods = ['GET', "POST"])
-# def guess():
-#     counter = 0
-#     message = ""
-#     if request.method == 'POST':
-#         counter += 1
-#         form = request.form
-#         user_guess = int(form["guess"])
-#         comp_num = random.randint(1, 10)
-
-#         if comp_num == user_guess:
-#             message = "Well done, you got it"
-#             return render_template("game_over.html", message=message)
-#         elif comp_num > user_guess:
-#             message = "Too low"
-#         else:
-#             message = "Too high"
-#             if counter == 3:
-#                 message = "You failed"
-#                 return render_template("game_over.html", message=message)
-#     return render_template("game.html", message=message)
-
-
-
-# @app.route('/', methods = ['GET', "POST"])
-# def play():
-#     return render_template("game_over.html")
 
 @app.route('/', methods = ['GET', "POST"])
 def start():
     if request.method == 'POST':
         if request.form["credits"] == str(10):
-            return redirect(url_for("game"))
+            form = request.form
+            username = str(form["username"])
+            credits = int(form["credits"])
+            start_game = Start(username=username, credits=credits)
+            db.session.add(start_game)
+            db.session.flush()
+            player_id = start_game.id
+            db.session.commit()
+            return redirect(url_for("game", id=player_id))
         if request.form["credits"] == str(0):
             return render_template("game_over.html")
     return render_template("start_game.html")
 
 
-@app.route('/game', methods = ['GET', "POST"])
-def game():
-    form = request.form
+@app.route('/game/<id>', methods = ['GET', "POST"])
+def game(id):
+    player = Start.query.filter_by(id=id).first()
     message = ""
-    credits = 10
-    username = str(form["username"])
+    credits = player.credits
+    username = player.username
     if request.method == 'POST':
         form = request.form
-        username = str(form["username"])
-        credits = int(form["credits"])
         user = str(form["guess"]).lower()
         computer = random.choice(['r', 'p', 's'])
-
-        if computer == user:
-            message = f'It is a tie. You and the computer have both chosen {user}.'
-            return render_template("game.html", message=message, credits=credits, username=username)
-        elif (user == 'r' and computer == 's') or (user == 's' and computer == 'p') or (user == 'p' and computer == 'r'):
-            message = f'You chose {user} and the computer chose {computer}. You lost :('
-            return render_template("game.html", message=message, credits=credits, username=username)
+        while credits > 3:
+            if computer == user:
+                player.credits = player.credits - 3
+                db.session.flush()
+                credits = player.credits
+                db.session.commit()
+                message = f'It is a tie. You and the computer have both chosen {user}.'
+                return render_template("game.html", message=message, credits=credits, username=username)
+            elif (user == 'r' and computer == 's') or (user == 's' and computer == 'p') or (user == 'p' and computer == 'r'):
+                player.credits = player.credits - 3
+                db.session.flush()
+                credits = player.credits
+                db.session.commit()
+                message = f'You chose {user} and the computer chose {computer}. You lost :('
+                return render_template("game.html", message=message, credits=credits, username=username)
+            else:
+                player.credits = player.credits + 1
+                db.session.flush()
+                credits = player.credits
+                db.session.commit()
+                message = f"You chose {user} and the computer chose {computer}. You won!"
+                return render_template("game.html", message=message, credits=credits, username=username)
         else:
-            message = f"You chose {user} and the computer chose {computer}. You won!"
-            return render_template("game.html", message=message, credits=credits, username=username)
+            return redirect(url_for("game_over", id=id))
     
     return render_template("game.html", message=message, credits=credits, username=username)
 
 
-# @app.route('/', methods = ['GET', "POST"])
-# def play_best_of(n=5):
-#     message = ""
-#     player_wins = 0
-#     computer_wins = 0
-#     wins_necessary = math.ceil(n/2)
-#     while player_wins < wins_necessary and computer_wins < wins_necessary:
-#         result, user, computer = play()
-#         # tie
-#         if result == 0:
-#             message = f'It is a tie. You and the computer have both chosen {user}.'
-#             return render_template("game.html", message=message, credits=credits)
-#         # you win
-#         elif result == 1:
-#             player_wins += 1
-#             message = f"You chose {user} and the computer chose {computer}. You won!"
-#             return render_template("game.html", message=message, credits=credits)
-#         else:
-#             computer_wins += 1
-#             message = f'You chose {user} and the computer chose {computer}. You lost :('
-#             return render_template("game.html", message=message, credits=credits)
 
-#     if player_wins > computer_wins:
-#         message = f'You have won the best of {n} games! What a champ :D'
-#         return render_template("game_over.html", message=message, credits=credits)
-#     else:
-#         message = f'Unfortunately, the computer has won the best of {n} games. Better luck next time!'
-#         return render_template("game_over.html", message=message, credits=credits)
-
-
-# def play():
-#     form = request.form
-#     user = str(form["guess"]).lower()
-#     computer = random.choice(['r', 'p', 's'])
-
-#     if user == computer:
-#         return (0, user, computer)
-
-#     # r > s, s > p, p > r
-#     if is_win(user, computer):
-#         return (1, user, computer)
-
-#     return (-1, user, computer)
-
-# def is_win(player, opponent):
-#     if (player == 'r' and opponent == 's') or (player == 's' and opponent == 'p') or (player == 'p' and opponent == 'r'):
-#         return True
-#     return False
+@app.route('/game_over/<id>', methods = ['GET', "POST"])
+def game_over(id):
+    player = Start.query.filter_by(id=id).first()
+    if request.method == 'POST':
+        form = request.form
+        another_credits = int(form["credits"])
+        player.credits = player.credits + another_credits
+        db.session.commit()
+        return redirect(url_for("game", id=id))
+    return render_template("game_over.html")
 
 
 
@@ -133,58 +93,3 @@ def game():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-    
-
-
-
-
-# def play():
-#     user = input("What's your choice? 'r' for rock, 'p' for paper, 's' for scissors\n")
-#     user = user.lower()
-
-#     computer = random.choice(['r', 'p', 's'])
-
-#     if user == computer:
-#         return (0, user, computer)
-
-#     # r > s, s > p, p > r
-#     if is_win(user, computer):
-#         return (1, user, computer)
-
-#     return (-1, user, computer)
-
-# def is_win(player, opponent):
-#     # return true is the player beats the opponent
-#     # winning conditions: r > s, s > p, p > r
-#     if (player == 'r' and opponent == 's') or (player == 's' and opponent == 'p') or (player == 'p' and opponent == 'r'):
-#         return True
-#     return False
-
-
-
-# def play_best_of(n):
-#     # play against the computer until someone wins best of n games
-#     # to win, you must win ceil(n/2) games (ie 2/3, 3/5, 4/7)
-#     player_wins = 0
-#     computer_wins = 0
-#     wins_necessary = math.ceil(n/2)
-#     while player_wins < wins_necessary and computer_wins < wins_necessary:
-#         result, user, computer = play()
-#         # tie
-#         if result == 0:
-#             print('It is a tie. You and the computer have both chosen {}. \n'.format(user))
-#         # you win
-#         elif result == 1:
-#             player_wins += 1
-#             return ('You chose {} and the computer chose {}. You won!\n'.format(user, computer))
-#         else:
-#             computer_wins += 1
-#             return ('You chose {} and the computer chose {}. You lost :(\n'.format(user, computer))
-
-#     if player_wins > computer_wins:
-#         return ('You have won the best of {} games! What a champ :D'.format(n))
-#     else:
-#         return ('Unfortunately, the computer has won the best of {} games. Better luck next time!'.format(n))
-
-# play_best_of(3)
