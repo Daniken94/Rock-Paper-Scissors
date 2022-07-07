@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import random
 import math
+import sys
 
 app = Flask(__name__)
 
@@ -22,11 +23,12 @@ class User(db.Model):
 
 class Stats(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    plays = db.Column(db.Integer)
-    credits_while = db.Column(db.Integer, default=10)
+    plays = db.Column(db.Integer, default=0)
+    credits_before = db.Column(db.Integer, default=10)
     win = db.Column(db.Integer)
     lost = db.Column(db.Integer)
     tie = db.Column(db.Integer)
+    credits_after = db.Column(db.Integer, default=10)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
 
@@ -48,7 +50,7 @@ def start():
             db.session.flush()
             player_id = start_game.id
             db.session.commit()
-            player_stats = Stats(play = 0, user_id = player_id)
+            player_stats = Stats(plays = 0, win = 0, lost = 1, tie = 0, user_id = player_id)
             db.session.add(player_stats)
             db.session.commit()
             return redirect(url_for("game", id=player_id))
@@ -60,15 +62,18 @@ def start():
 @app.route('/game/<id>', methods = ['GET', "POST"])
 def game(id):
     player = User.query.filter_by(id=id).first()
-    player_stats = Stats.query.filter_by(user_id=id)
+    player_stats = Stats.query.filter_by(user_id=id).first()
     message = ""
-    credits = player.credits
+    credits_top = player.credits
     username = player.username
+
+    
     if request.method == 'POST':
         form = request.form
         user = str(form["guess"]).lower()
         computer = random.choice(['r', 'p', 's'])
-        while credits > 3:
+
+        while credits_top > 3:
             if computer == user:
                 
                 player.credits = player.credits - 3
@@ -76,11 +81,13 @@ def game(id):
                 credits = player.credits
                 db.session.commit()
 
-                player_stats = Stats(credits_while = credits + 3, win = 0, lost = 0, tie = 1, user_id=id)
+                player_stats.plays = player_stats.plays + 1
+                db.session.flush()
+                player_stats_play = player_stats.plays
+
+                player_stats = Stats(plays = player_stats_play, credits_before = credits_top, credits_after = credits, win = 0, lost = 0, tie = 1, user_id=id)
                 db.session.add(player_stats)
                 db.session.commit()
-
-
 
                 user = MOVES.get(user)
                 message = f'It is a tie. You and the computer have both chosen {user}.'
@@ -91,7 +98,11 @@ def game(id):
                 credits = player.credits
                 db.session.commit()
 
-                player_stats = Stats(credits_while = credits + 3, win = 0, lost = 1, tie = 0, user_id=id)
+                player_stats.plays = player_stats.plays + 1
+                db.session.flush()
+                player_stats_play = player_stats.plays
+                
+                player_stats = Stats(plays = player_stats_play, credits_before = credits_top, credits_after = credits, win = 0, lost = 1, tie = 0, user_id=id)
                 db.session.add(player_stats)
                 db.session.commit()
 
@@ -105,8 +116,11 @@ def game(id):
                 credits = player.credits
                 db.session.commit()
 
-                player_stats = Stats(credits_while = credits - 1, win = 1, lost = 0, tie = 0, user_id=id)
-                db.session.add(player_stats)
+                player_stats.plays = player_stats.plays + 1
+                db.session.flush()
+                player_stats_play = player_stats.plays
+
+                player_stats = Stats(plays = player_stats_play, credits_before = credits_top, credits_after = credits, win = 1, lost = 0, tie = 0, user_id=id)
                 db.session.commit()
 
                 user = MOVES.get(user)
@@ -116,7 +130,7 @@ def game(id):
         else:
             return redirect(url_for("game_over", id=id))
     
-    return render_template("game.html", message=message, credits=credits, username=username)
+    return render_template("game.html", message=message, credits=credits_top, username=username)
 
 
 
