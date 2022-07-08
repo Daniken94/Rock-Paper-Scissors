@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 {% extends 'base.html' %}
 
+{% block title%}
+
+<h1>Welcome to game</h1>
+
+{% endblock %}
+
 {% block container %}
 <p>
     Would you like to play?
@@ -10,7 +16,6 @@
     <label for="name">Type your name:</label>
     <input name="username"/>
     <button name ="credits" type="submit" value="10">Add 10 credits to start the game</button> 
-    <button name ="credits" type="submit" value="0">Cancel</button> 
 </form>
 
 {% endblock %}

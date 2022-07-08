@@ -10,18 +10,19 @@
     <button name ="guess" type="submit" value="p">Paper!</button> 
     <button name ="guess" type="submit" value="s">Scissors!</button> 
 </form>
+<br>
 <p>
     {{ message }}
-    <br>
+    <br><br>
     Hello {{ username }}
-    <br>
+    <br><br>
     Your credits: {{ credits }}
 </p>
 {% endblock %}
 
 {% block stats %}
 <form method="POST">
-    <button name ="stats" type="submit" value="stats">YOUR STATS</button> 
+    <button name ="guess" type="submit" value="stats">YOUR STATS</button> 
 </form>
 {% endblock %}
 

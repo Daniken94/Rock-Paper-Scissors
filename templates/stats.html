@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+
+{% block container %}
+
+<h3>GAME OVER</h3>
+<p>
+    <h3>Your stats:</h3>
+    Name: {{ player.username }}
+    <br><br>
+    Id: {{ player.id }}
+    <br><br>
+    Data: {{ player.date_created }}
+    <br><br>
+    You played today {{ plays }} times!
+    <br><br>
+    You today win: {{ wins }} times!
+    <br><br>
+    You today lost: {{ losts }} times!
+    <br><br>
+    You today tie: {{ ties }} times!
+    <br><br>
+
+
+    <table>
+        <thead>
+           <tr>
+            <th>User ID</th> <th>Credits before run</th> <th>Win</th> <th>Lost</th> <th>Tie</th> <th>Credits after run</th> <th>Date</th>
+           </tr>
+        </thead>
+        <tbody>
+            {% for i in stats %}
+           <tr>
+            <td>{{ i.user_id }}</td> <td>{{ i.credits_before }}</td> <td>{{ i.win }}</td> <td>{{ i.lost }}</td> <td>{{ i.tie }}</td> <td>{{ i.credits_after }}</td> <td>{{ i.date_created }}</td>
+           </tr>
+           {% endfor %}
+        </tbody>
+     </table>
+
+</p>
+
+{% endblock %}
+
+{% block stats %}
+
+<form method="POST">
+    <button name ="guess" type="submit" value="new">Start new game</button> 
+    <button name ="guess" type="submit" value="old">Continue game</button> 
+</form>
+
+{% endblock %}
+
+</html>

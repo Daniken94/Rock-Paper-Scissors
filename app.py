@@ -1,9 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, session 
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, date
+from sqlalchemy.sql import func, text
+from sqlalchemy import and_, or_, not_
 import random
 import math
 import sys
+
+from sqlalchemy import Date
 
 app = Flask(__name__)
 
@@ -17,18 +21,21 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50))
     credits = db.Column(db.Integer, default=10)
-    date_created = db.Column(db.DateTime, default=datetime.now)
+    datetime_created = db.Column(db.DateTime, default=datetime.now)
+    date_created = db.Column(db.Date, default=date.today)
     # User can have many game in stats
     statistics = db.relationship("Stats", backref="dbuser")
 
 class Stats(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     plays = db.Column(db.Integer, default=0)
-    credits_before = db.Column(db.Integer, default=10)
+    credits_before = db.Column(db.Integer, default=0)
     win = db.Column(db.Integer)
     lost = db.Column(db.Integer)
     tie = db.Column(db.Integer)
     credits_after = db.Column(db.Integer, default=10)
+    datetime_created = db.Column(db.DateTime, default=datetime.now)
+    date_created = db.Column(db.Date, default=date.today)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
 
@@ -50,12 +57,11 @@ def start():
             db.session.flush()
             player_id = start_game.id
             db.session.commit()
-            player_stats = Stats(plays = 0, win = 0, lost = 1, tie = 0, user_id = player_id)
+            player_stats = Stats(plays = 0, win = 0, lost = 0, tie = 0, user_id = player_id)
             db.session.add(player_stats)
             db.session.commit()
             return redirect(url_for("game", id=player_id))
-        if request.form["credits"] == str(0):
-            return render_template("game_over.html")
+
     return render_template("start_game.html")
 
 
@@ -69,66 +75,59 @@ def game(id):
 
     
     if request.method == 'POST':
-        form = request.form
-        user = str(form["guess"]).lower()
-        computer = random.choice(['r', 'p', 's'])
+        if request.form["guess"] == "stats":
+            return redirect(url_for("statistics", id=id))
+        elif request.form["guess"] == 'r' or 'p' or 's':
+            form = request.form
+            user = str(form["guess"]).lower()
+            computer = random.choice(['r', 'p', 's'])
+            while credits_top > 0:
+                if computer == user:
+                    print("tie")
+                    player.credits = player.credits - 3
+                    db.session.flush()
+                    credits = player.credits
+                    db.session.commit()
 
-        while credits_top > 3:
-            if computer == user:
-                
-                player.credits = player.credits - 3
-                db.session.flush()
-                credits = player.credits
-                db.session.commit()
+                    player_stats = Stats(plays = 1, credits_before = credits_top, credits_after = credits, win = 0, lost = 0, tie = 1, user_id=id)
+                    db.session.add(player_stats)
+                    db.session.commit()
 
-                player_stats.plays = player_stats.plays + 1
-                db.session.flush()
-                player_stats_play = player_stats.plays
+                    user = MOVES.get(user)
+                    message = f'It is a tie. You and the computer have both chosen {user}.'
+                    return render_template("game.html", message=message, credits=credits, username=username)
+                elif (user == 'r' and computer == 's') or (user == 's' and computer == 'p') or (user == 'p' and computer == 'r'):
+                    print("lost")
+                    player.credits = player.credits - 3
+                    db.session.flush()
+                    credits = player.credits
+                    db.session.commit()
+                    
+                    player_stats = Stats(plays = 1, credits_before = credits_top, credits_after = credits, win = 0, lost = 1, tie = 0, user_id=id)
+                    db.session.add(player_stats)
+                    db.session.commit()
 
-                player_stats = Stats(plays = player_stats_play, credits_before = credits_top, credits_after = credits, win = 0, lost = 0, tie = 1, user_id=id)
-                db.session.add(player_stats)
-                db.session.commit()
+                    user = MOVES.get(user)
+                    computer = MOVES.get(computer)
+                    message = f'You chose {user} and the computer chose {computer}. You lost :('
+                    return render_template("game.html", message=message, credits=credits, username=username)
+                else:
+                    print("win")
+                    player.credits = player.credits + 1
+                    db.session.flush()
+                    credits = player.credits
+                    db.session.commit()
 
-                user = MOVES.get(user)
-                message = f'It is a tie. You and the computer have both chosen {user}.'
-                return render_template("game.html", message=message, credits=credits, username=username)
-            elif (user == 'r' and computer == 's') or (user == 's' and computer == 'p') or (user == 'p' and computer == 'r'):
-                player.credits = player.credits - 3
-                db.session.flush()
-                credits = player.credits
-                db.session.commit()
+                    player_stats = Stats(plays = 1, credits_before = credits_top, credits_after = credits, win = 1, lost = 0, tie = 0, user_id=id)
+                    db.session.add(player_stats)
+                    db.session.commit()
 
-                player_stats.plays = player_stats.plays + 1
-                db.session.flush()
-                player_stats_play = player_stats.plays
-                
-                player_stats = Stats(plays = player_stats_play, credits_before = credits_top, credits_after = credits, win = 0, lost = 1, tie = 0, user_id=id)
-                db.session.add(player_stats)
-                db.session.commit()
-
-                user = MOVES.get(user)
-                computer = MOVES.get(computer)
-                message = f'You chose {user} and the computer chose {computer}. You lost :('
-                return render_template("game.html", message=message, credits=credits, username=username)
+                    user = MOVES.get(user)
+                    computer = MOVES.get(computer)
+                    message = f"You chose {user} and the computer chose {computer}. You won!"
+                    return render_template("game.html", message=message, credits=credits, username=username)
             else:
-                player.credits = player.credits + 1
-                db.session.flush()
-                credits = player.credits
-                db.session.commit()
-
-                player_stats.plays = player_stats.plays + 1
-                db.session.flush()
-                player_stats_play = player_stats.plays
-
-                player_stats = Stats(plays = player_stats_play, credits_before = credits_top, credits_after = credits, win = 1, lost = 0, tie = 0, user_id=id)
-                db.session.commit()
-
-                user = MOVES.get(user)
-                computer = MOVES.get(computer)
-                message = f"You chose {user} and the computer chose {computer}. You won!"
-                return render_template("game.html", message=message, credits=credits, username=username)
-        else:
-            return redirect(url_for("game_over", id=id))
+                return redirect(url_for("game_over", id=id))
     
     return render_template("game.html", message=message, credits=credits_top, username=username)
 
@@ -138,14 +137,47 @@ def game(id):
 def game_over(id):
     player = User.query.filter_by(id=id).first()
     if request.method == 'POST':
-        form = request.form
-        # another_credits = int(form["credits"])
-        player.credits = player.credits + 10
-        db.session.commit()
-        return redirect(url_for("game", id=id))
+        if request.form["guess"] == "stats":
+            return redirect(url_for("statistics", id=id))
+        elif request.form["guess"] == "10":
+            player.credits = player.credits + 10
+            db.session.commit()
+            return redirect(url_for("game", id=id))
     return render_template("game_over.html")
 
 
+
+@app.route('/stats/<id>', methods = ['GET', "POST"])
+def statistics(id):
+    player = User.query.filter_by(id=id).first()
+    stats = Stats.query.filter_by(user_id=id)
+    stats2 = Stats.query.filter(Stats.user_id==id, Stats.date_created==datetime.today().strftime('%Y-%m-%d'))
+
+    plays = []
+    wins = []
+    losts = []
+    ties = []
+
+    for play in stats2:
+        i = play.plays
+        w = play.win
+        l = play.lost
+        t = play.tie
+        plays.insert(0, i)
+        wins.insert(0, w)
+        losts.insert(0, l)
+        ties.insert(0, t)
+    plays = sum(plays)
+    wins = sum(wins)
+    losts = sum(losts)
+    ties = sum(ties)
+
+    if request.method == 'POST':
+        if request.form["guess"] == "old":
+            return redirect(url_for("game", id=id))
+        elif request.form["guess"] == "new":
+            return redirect(url_for("start"))
+    return render_template("stats.html", stats=stats, player=player, plays=plays, wins=wins, losts=losts, ties=ties)
 
 
 
