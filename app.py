@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import validates
-from datetime import datetime, date
+from sqlalchemy.sql import func
+from datetime import datetime, date, time
 import random
 
 app = Flask(__name__)
@@ -241,6 +242,7 @@ def statistics(id):
         wins=wins,
         losts=losts,
         ties=ties,
+        time=time,
     )
 
 

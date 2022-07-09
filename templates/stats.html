@@ -25,13 +25,13 @@
     <table>
         <thead>
            <tr>
-            <th>User ID</th> <th>Credits before run</th> <th>Win</th> <th>Lost</th> <th>Tie</th> <th>Credits after run</th> <th>Date</th>
+            <th>User ID</th> <th>Credits before run</th> <th>Win</th> <th>Lost</th> <th>Tie</th> <th>Credits after run</th> <th>Date</th> <th>Time</th>
            </tr>
         </thead>
         <tbody>
             {% for i in stats %}
            <tr>
-            <td>{{ i.user_id }}</td> <td>{{ i.credits_before }}</td> <td>{{ i.win }}</td> <td>{{ i.lost }}</td> <td>{{ i.tie }}</td> <td>{{ i.credits_after }}</td> <td>{{ i.date_created }}</td>
+            <td>{{ i.user_id }}</td> <td>{{ i.credits_before }}</td> <td>{{ i.win }}</td> <td>{{ i.lost }}</td> <td>{{ i.tie }}</td> <td>{{ i.credits_after }}</td> <td>{{ i.date_created }}</td> <td>{{ i. datetime_created.strftime('%H:%M:%S') }}</td>
            </tr>
            {% endfor %}
         </tbody>
