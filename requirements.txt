@@ -3,5 +3,6 @@ flask_sqlalchemy==2.5.1
 pytz==2022.1
 postgres==4.0
 docker==5.0.3
+docker-compose==1.29.2
 black==22.6.0
 flake8==2.4.0
