@@ -219,10 +219,10 @@ def statistics(id):
         w = play.win
         l = play.lost
         t = play.tie
-        plays.insert(0, i)
-        wins.insert(0, w)
-        losts.insert(0, l)
-        ties.insert(0, t)
+        plays.append(i)
+        wins.append(w)
+        losts.append(l)
+        ties.append(t)
     plays = sum(plays)
     wins = sum(wins)
     losts = sum(losts)

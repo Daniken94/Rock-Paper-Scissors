@@ -1,0 +1,5 @@
+docker build -t rps .
+docker images
+docker run -d -p 5000:5000 rps
+docker ps
+docker stop "conteiner id"
