@@ -42,3 +42,17 @@ In order to terminate the use and shut down the server it is necessary to run co
 ```
 crtl + c
 ```
+
+## Docker and Docker-compose error:
+
+while problem with: 
+
+```
+"Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get http://%2Fvar%2Frun%2Fdocker.sock/v1.24/images/json: dial unix /var/run/docker.sock: connect: permission denied"
+```
+
+run command:
+
+```
+sudo chmod 666 /var/run/docker.sock
+```
