@@ -10,7 +10,7 @@
     <br><br>
     Id: {{ player.id }}
     <br><br>
-    Data: {{ player.date_created }}
+    Date of the start of the game: {{ player.date_created }}
     <br><br>
     You played today {{ plays }} times!
     <br><br>
@@ -38,6 +38,7 @@
      </table>
 
 </p>
+<br><br>
 
 {% endblock %}
 
@@ -48,6 +49,38 @@
     <button name ="guess" type="submit" value="old">Continue game</button> 
 </form>
 
+{% endblock %}
+
+{% block stats_all %}
+<br><br>    <br><br>
+<p>
+    <h3>Your entire stats:</h3>
+    You played {{ plays_all }} times!
+    <br><br>
+    You win: {{ wins_all }} times!
+    <br><br>
+    You lost: {{ losts_all }} times!
+    <br><br>
+    You tie: {{ ties_all }} times!
+    <br><br>
+
+
+    <table>
+        <thead>
+           <tr>
+            <th>User ID</th> <th>Credits before run</th> <th>Win</th> <th>Lost</th> <th>Tie</th> <th>Credits after run</th> <th>Date</th> <th>Time</th>
+           </tr>
+        </thead>
+        <tbody>
+            {% for i in stats_all %}
+           <tr>
+            <td>{{ i.user_id }}</td> <td>{{ i.credits_before }}</td> <td>{{ i.win }}</td> <td>{{ i.lost }}</td> <td>{{ i.tie }}</td> <td>{{ i.credits_after }}</td> <td>{{ i.date_created }}</td> <td>{{ i. datetime_created.strftime('%H:%M:%S') }}</td>
+           </tr>
+           {% endfor %}
+        </tbody>
+     </table>
+
+</p>
 {% endblock %}
 
 </html>

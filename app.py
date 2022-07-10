@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import desc
 from sqlalchemy.orm import validates
 from sqlalchemy.sql import func
 from datetime import datetime, date, time
@@ -200,14 +201,13 @@ def game_over(id):
     return render_template("game_over.html")
 
 
-# app for display stats
+# app for display stats. Stats are sorted by datetime from newest to oldest
 @app.route("/stats/<id>", methods=["GET", "POST"])
 def statistics(id):
     player = User.query.filter_by(id=id).first()
-    stats = Stats.query.filter_by(user_id=id)
-    stats2 = Stats.query.filter(
-        Stats.user_id == id, Stats.date_created == datetime.today().strftime("%Y-%m-%d")
-    )
+    stats_all = Stats.query.filter_by(user_id=id).order_by(desc('datetime_created'))
+    stats = Stats.query.filter(
+        Stats.user_id == id, Stats.date_created == datetime.today().strftime("%Y-%m-%d")).order_by(desc('datetime_created'))
 
     # for in loop to aggregate sum of win, lost, tie and plays.
     plays = []
@@ -215,7 +215,7 @@ def statistics(id):
     losts = []
     ties = []
 
-    for play in stats2:
+    for play in stats:
         i = play.plays
         w = play.win
         l = play.lost
@@ -229,6 +229,27 @@ def statistics(id):
     losts = sum(losts)
     ties = sum(ties)
 
+   # for in loop to aggregate sum of win, lost, tie and plays in all days from player ID.
+
+    plays_all = []
+    wins_all = []
+    losts_all = []
+    ties_all = []
+
+    for play in stats_all:
+        i = play.plays
+        w = play.win
+        l = play.lost
+        t = play.tie
+        plays_all.append(i)
+        wins_all.append(w)
+        losts_all.append(l)
+        ties_all.append(t)
+    plays_all = sum(plays_all)
+    wins_all = sum(wins_all)
+    losts_all = sum(losts_all)
+    ties_all = sum(ties_all)
+
     if request.method == "POST":
         if request.form["guess"] == "old":
             return redirect(url_for("game", id=id))
@@ -237,12 +258,16 @@ def statistics(id):
     return render_template(
         "stats.html",
         stats=stats,
+        stats_all=stats_all,
         player=player,
         plays=plays,
         wins=wins,
         losts=losts,
         ties=ties,
-        time=time,
+        plays_all=plays_all,
+        wins_all=wins_all,
+        losts_all=losts_all,
+        ties_all=ties_all,
     )
 
 

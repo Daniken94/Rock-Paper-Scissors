@@ -3,3 +3,7 @@ docker images
 docker run -d -p 5000:5000 rps
 docker ps
 docker stop "conteiner id"
+
+
+while problem with --- "Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get http://%2Fvar%2Frun%2Fdocker.sock/v1.24/images/json: dial unix /var/run/docker.sock: connect: permission denied"
+run - sudo chmod 666 /var/run/docker.sock
