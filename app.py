@@ -205,9 +205,10 @@ def game_over(id):
 @app.route("/stats/<id>", methods=["GET", "POST"])
 def statistics(id):
     player = User.query.filter_by(id=id).first()
-    stats_all = Stats.query.filter_by(user_id=id).order_by(desc('datetime_created'))
+    stats_all = Stats.query.filter_by(user_id=id).order_by(desc("datetime_created"))
     stats = Stats.query.filter(
-        Stats.user_id == id, Stats.date_created == datetime.today().strftime("%Y-%m-%d")).order_by(desc('datetime_created'))
+        Stats.user_id == id, Stats.date_created == datetime.today().strftime("%Y-%m-%d")
+    ).order_by(desc("datetime_created"))
 
     # for in loop to aggregate sum of win, lost, tie and plays.
     plays = []
@@ -229,7 +230,7 @@ def statistics(id):
     losts = sum(losts)
     ties = sum(ties)
 
-   # for in loop to aggregate sum of win, lost, tie and plays in all days from player ID.
+    # for in loop to aggregate sum of win, lost, tie and plays in all days from player ID.
 
     plays_all = []
     wins_all = []
