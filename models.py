@@ -2,6 +2,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import validates
 from datetime import datetime, date, time
 
+
+
 db = SQLAlchemy()
 
 
@@ -33,3 +35,5 @@ class Stats(db.Model):
     datetime_created = db.Column(db.DateTime, default=datetime.now)
     date_created = db.Column(db.Date, default=date.today)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+
+
