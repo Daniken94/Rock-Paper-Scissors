@@ -1,9 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+from models import Stats, User
 from sqlalchemy import desc
-from sqlalchemy.orm import validates
-from sqlalchemy.sql import func
-from datetime import datetime, date, time
+from datetime import datetime
 import random
 
 app = Flask(__name__)
@@ -14,38 +13,6 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
 
 db = SQLAlchemy(app)
-
-# Database models
-
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50))
-    credits = db.Column(db.Integer, default=10)
-    datetime_created = db.Column(db.DateTime, default=datetime.now)
-    date_created = db.Column(db.Date, default=date.today)
-    # User can have many game in stats
-    statistics = db.relationship("Stats", backref="dbuser")
-
-    # validate username. Required field
-    @validates("username")
-    def validate_name(self, key, value):
-        if value == "":
-            raise ValueError("Please type your name")
-        return value
-
-
-class Stats(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    plays = db.Column(db.Integer, default=0)
-    credits_before = db.Column(db.Integer, default=0)
-    win = db.Column(db.Integer)
-    lost = db.Column(db.Integer)
-    tie = db.Column(db.Integer)
-    credits_after = db.Column(db.Integer, default=10)
-    datetime_created = db.Column(db.DateTime, default=datetime.now)
-    date_created = db.Column(db.Date, default=date.today)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
 
 # Dict for form select answer
