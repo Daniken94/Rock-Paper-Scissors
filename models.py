@@ -10,7 +10,7 @@ db = SQLAlchemy()
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50))
-    credits = db.Column(db.Integer, default=10)
+    credits = db.Column(db.Integer, default = 10)
     datetime_created = db.Column(db.DateTime, default=datetime.now)
     date_created = db.Column(db.Date, default=date.today)
     # User can have many game in stats

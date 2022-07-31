@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from models import Stats, User
-from sqlalchemy import desc
+from sqlalchemy import desc, create_engine
 from datetime import datetime
 import random
 
@@ -9,11 +9,16 @@ app = Flask(__name__)
 
 # Config database
 
+# app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
-# app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@localhost/rps_db"
+# app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@localhost:5432/rps_db"
+app.config["SQLALCHEMY_COMMIT_ON_TEARDOWN"] = True
 
 db = SQLAlchemy(app)
+engine = create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
+Stats.metadata.create_all(engine)
+User.metadata.create_all(engine)
 
 
 # Dict for form select answer
@@ -52,7 +57,8 @@ def start():
 # Game. Need ID for colecting data in database
 @app.route("/game/<id>", methods=["GET", "POST"])
 def game(id):
-    player = User.query.filter_by(id=id).first()
+    # user = User.query.filter_by(id=id).first()
+    player = db.session.query(User).filter_by(id=id).first()
     player_stats = Stats.query.filter_by(user_id=id).first()
     message = ""
     credits_top = player.credits
@@ -73,6 +79,7 @@ def game(id):
                     db.session.flush()
                     credits = player.credits
                     db.session.commit()
+
                     # saving player stats in database
                     player_stats = Stats(
                         plays=1,
@@ -158,7 +165,7 @@ def game(id):
 # game over template you can add next 10 credits
 @app.route("/game_over/<id>", methods=["GET", "POST"])
 def game_over(id):
-    player = User.query.filter_by(id=id).first()
+    player = db.session.query(User).filter_by(id=id).first()
     if request.method == "POST":
         if request.form["guess"] == "stats":
             return redirect(url_for("statistics", id=id))
