@@ -9,9 +9,10 @@ app = Flask(__name__)
 
 # Config database
 
-# app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+#dodatkowy komentarz
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-# app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@localhost:5432/rps_db"
 app.config["SQLALCHEMY_COMMIT_ON_TEARDOWN"] = True
 
